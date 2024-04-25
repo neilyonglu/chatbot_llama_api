@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat Interface</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        #chat-container {
+            width: 98%;
+            height: 500px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            overflow: hidden;
+        }
+        #messages {
+            height: 400px;
+            overflow-y: scroll;
+            display: flex;
+            flex-direction: column-reverse;
+            padding: 10px;
+            flex-direction: column-reverse;
+        }
+        #user_input {
+            /* text-align: right; */
+            align-self: flex-end;
+            background-color: #dcf8c6;
+        }
+        #bot_response {
+            align-self: flex-start;
+            background-color: #e2e2e2;
+        }
+        .message {
+            max-width: 60%;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        #user_inputBox {
+            flex-grow: 1;
+            padding: 5px;
+            border-radius: 3px 0 0 3px; /* 左側圓角 */
+            border: 1px solid #43bae9;
+            width: calc(100% - 100px);
+            box-sizing: border-box;
+            height: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="messages">
+            <div style="align-self: flex-start; background-color: #e2e2e2;">Hello, I am a chatbot. How can I help you?</div>
+            {% for message in messages %}
+              {% if message.sender == 'user' %}
+                <div class="message user_message">{{ message.text }}</div>
+              {% else %}
+                <div class="message bot_message">{{ message.text }}</div>
+              {% endif %}
+            {% endfor %}
+        </div>
+        <form id="chatForm">
+            <input type="text" id="user_inputBox" name="user_input" required>
+            <button type="submit">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                    <path d="M24 0l-6 22-8.129-7.239 7.802-8.234-10.458 7.227-7.215-1.754 24-12zm-15 16.668v7.332l3.258-4.431-3.258-2.901z"/>
+                </svg>
+            </button>
+        </form>
+        <button type="button" id="clearMessages">Clear Messages</button>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#chatForm').submit(function(e) {
+                e.preventDefault();
+                var user_input = $('#user_inputBox').val();
+                $.post('/reply/', {user_input: user_input, csrfmiddlewaretoken: '{{ csrf_token }}'}, function(data) {
+                    $('#messages').prepend('<p id="user_input">' + user_input + '</p>'); 
+                    $('#user_input').val('');
+                }).then((response) =>{
+                    bot_message = response
+                    $('#messages').prepend('<p id="bot_response">' + response["message"] + '</p>');
+                });
+            });
+            $('#clearMessages').click(function() {
+                $('#messages').empty();
+            });
+        });
+    </script>
+</body>
+</html>
